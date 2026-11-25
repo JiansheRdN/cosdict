@@ -70,27 +70,31 @@ Due to mispresence of the formal consense or `LICENSE`ing from the author of `CO
 ## Font attribution & Licence / 字体署名与许可
 
 - The game-glyph font **COSGlyphs** is the work of **Wolceorght** and comes from its own project: <https://github.com/Wolceorght/COSGlyphs>. It is redistributed here for convenience with attribution; please refer to the upstream project for its terms of use and consider supporting the original author.
- 游戏字符字体 **COSGlyphs** 由 **Wolceorght** 制作，来自其项目 <https://github.com/Wolceorght/COSGlyphs>。此处为方便读者附带提供并署名，其使用条款请以上游项目为准，并请支持原作者。
+
+  游戏字符字体 **COSGlyphs** 由 **Wolceorght** 制作，来自其项目 <https://github.com/Wolceorght/COSGlyphs>。此处为方便读者附带提供并署名，其使用条款请以上游项目为准，并请支持原作者。
 
 - **Text and compiled dictionary content** (definitions, grammar notes, index, typesetting) are released under **CC BY-NC-SA 4.0**.
+
   字典的**文字内容**（释义、语法说明、检字表、版式）采用 **CC BY-NC-SA 4.0** 协议发布。
 - The **names, glyphs, and in-game screenshots** of *Chants of Sennaar* belong to their respective rights holders (**Rundisc** / **Focus Entertainment**). This is an unofficial, fan-made work with no affiliation to them.
+
   《巴别塔圣歌》的**名称、游戏字形及游戏截图**的权利归原权利人（**Rundisc** / **Focus Entertainment**）所有。本书为玩家自制的非官方资料，与其无任何关联。
-- The bundled **COSGlyphs** font is governed by its upstream project, not by this licence.
-  附带的 **COSGlyphs** 字体以其上游项目为准，不受本许可约束。
+- **COSGlyphs** font is governed by its upstream project, not by this licence.
+
+  借用的的 **COSGlyphs** 字体以其上游项目为准，不受本许可约束。
 
 ---
 
 ## Credits / 编写
 
-Written and compiled by **JiansheRdN（建设北路）**, 2026, Malta.
+- Written and compiled by **JiansheRdN（建设北路）**, 2026, Malta.
 
-由 **建设北路（JiansheRdN）** 编写，2026 年，马耳他。
+  由 **建设北路（JiansheRdN）** 编写，2026 年，马耳他。
 
-`.sty` package by Claude AI.
+- `.sty` package by Claude AI.
 
-`.sty` 宏包由 Claude AI 编写。
+  `.sty` 宏包由 Claude AI 编写。
 
-Corrections and suggestions are welcome via Issues.
+- Corrections and suggestions are welcome via Issues.
 
-欢迎通过 Issue 提出勘误与建议。
+  欢迎通过 Issue 提出勘误与建议。
