@@ -8,7 +8,7 @@ A concise in-game glossary / dictionary for the five constructed languages in th
 
 ## Download the compiled dictionary / 下载编译成品
 
-Please refer to each [Release](../../releases) to download the attached compiled .pdf document. The source tree is provided for those who would like to compile the glossary themselves only. 
+Please refer to each [Release](../../releases) to download the attached compiled `.pdf` document. The source tree is provided for those who would like to compile the glossary themselves only. 
 
 `.pdf` 编译成品文件附在各版 [Release](../../releases) 下供下载。如欲本地编译请看本仓库的 source tree。
 
