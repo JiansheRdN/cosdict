@@ -1,0 +1,749 @@
+% 用 XeLaTeX 编译两次（第二次生成目录、检字表页码和书眉）
+\documentclass[twoside,12pt]{article} % 12pt＝小四
+\usepackage[UTF8]{ctex}   % ctex 宏包形式不接管标题，交给 cosdict 的 titlesec 设置
+\usepackage{../common/cosdict}  % 版式宏包放共用文件夹 ../common/
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{xurl}      % 要放在 hyperref 之后
+\hypersetup{hidelinks} % 去掉链接外面的彩色方框
+
+% ---------------- 字体（连字、上下文替换一律开启） ----------------
+\defaultfontfeatures{Ligatures={Common,TeX}, Contextuals=Alternate}
+\setmainfont{Times New Roman}[Ligatures={Common,Rare,Historic,TeX}]
+\setCJKmainfont{SimSun}[AutoFakeBold=2.5, AutoFakeSlant=0.2]
+\setCJKfamilyfont{zhhei}{SimHei}                              % 黑体（用于 \emph）
+% \emph：中文用黑体，西文仍为斜体
+\renewcommand\emph[1]{{\CJKfamily{zhhei}\itshape #1}}
+\setCJKfamilyfont{zhtitle}{STZhongsong}[AutoFakeBold=2.5] % 华文中宋无粗体，用伪粗体
+\setCJKfamilyfont{zhkai}{KaiTi}[AutoFakeBold=2.5]           % 楷体
+\newcommand\kaiti{\CJKfamily{zhkai}}                          % 用法：{\kaiti 文字}
+\newfontfamily\TitleLatinFont{Times New Roman}[Ligatures={Common,Rare,Historic,TeX}]
+\renewcommand\DictTitleFont{\TitleLatinFont\CJKfamily{zhtitle}}
+
+% 字体放共用文件夹 ../common/fonts/，按文件名加载
+\newfontfamily\COSGlyphFont{COSGlyphs}[
+  Path=../common/fonts/,
+  Extension=.otf,
+  Ligatures={Common,Rare,Required},
+  Contextuals=Alternate,
+  HyphenChar=None]
+\renewcommand\DictGlyphFont{\COSGlyphFont}
+
+\newfontfamily\ArialFont{Arial}
+\renewcommand\DictLineNoFont{\ArialFont} % 行数字体
+\renewcommand\DictExampleFont{\kaiti}     % 说明中例句译文用楷体
+\newfontfamily\SymbolFont{Segoe UI Symbol} 
+
+\begin{document}
+
+\begin{titlepage}
+  \centering\vspace*{0.5cm}
+  {\DictTitleFont\fontsize{26pt}{32pt}\selectfont \textbf{A Concise In-Game Glossary for \\``Chants of Sennaar'' \\ \_ \\《巴别塔圣歌》游戏语言简明小字典}\par}
+  \vspace{4cm}
+  \begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.6]{Chants-of-Sennaar-title.png}
+  \end{figure}
+  {\fontsize{14pt}{28pt}\selectfont \textbf{（中文第一版）}\par}
+  \vspace*{\fill}
+  {\DictTitleFont\fontsize{16pt}{24pt}\selectfont \textbf{Written and Compiled By JiansheRdN \\建设北路编写}\\ 2026年 · 马耳他\par}
+  \vspace{1cm}
+  
+\end{titlepage}
+
+% ----------------------- 版权页（书名页背面） -----------------------
+\thispagestyle{empty}
+\vspace*{\fill}
+{\small
+\noindent《巴别塔圣歌》游戏语言简明小字典（中文第一版）\\
+建设北路（JiansheRdN）编写，2026 年 11 月，马耳他
+
+\medskip
+\noindent 本书为玩家自制的非官方资料，与 Rundisc 及 Focus Entertainment 无任何关联。
+《巴别塔圣歌》（\emph{Chants of Sennaar}）的名称、游戏字形及书中所用游戏图片的权利均归原权利人所有。
+其余图片的出处见参考文献。
+
+\medskip
+\noindent 本书文字内容采用CC BY-NC-SA 4.0协议发布。
+
+\medskip
+\noindent 如有意见、勘误或是举报侵权请寄：\url{jiansherdn@gmail.com}。
+\par}
+\clearpage
+
+% ======================= 正文前 =======================
+\DictFrontmatter
+
+\vspace*{4cm}
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=0.1]{game-opening-interface.jpg}
+  \caption{《巴别塔圣歌》游戏（The Game ``Chants of Sennaar''）（来源：\cite{opening}）}
+\end{figure}
+\vspace*{\fill}
+\begin{figure}[ht]
+  \centering
+  \includegraphics[scale=1]{Chants-of-Sennaar-cover.png}
+  \caption{游戏官方宣传图（来源：\cite{cos-poster}）}
+\end{figure}
+\vspace*{4cm}
+
+% ----------------------- 扉页：五族语言题词 -----------------------
+% \epiline{触发字符串}{中文译文}：上行游戏文字，下行楷体译文（自动加引号）
+\newcommand\epiline[2]{%
+  {\fontsize{22pt}{37pt}\selectfont\G{#1}\par}%
+  {\kaiti\fontsize{16pt}{37pt}\selectfont “#2”\par}}
+\clearpage
+\thispagestyle{empty}
+\begingroup
+\centering
+\vspace*{\stretch{1}}      % 上方空白
+\epiline{d_devoteed_devoteed_loved_god}{信徒们爱神。}
+\epiline{g_pluralg_warriorg_carryg_duty}{战士们担天责。}
+\epiline{b_beautyb_bardb_pluralb_love}{美，诗人们之所爱。}
+\epiline{a_alchemista_plurala_seeka_transform}{炼金术师们追求转化。}
+\epiline{r_mypeopler_fearr_exile}{隐士们惧怕放逐。}
+\vspace*{\stretch{2}}    % 下方空白略大，整体略偏上
+\par\endgroup
+\clearpage
+
+\DictTableOfContents
+
+\vspace*{\fill}
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.075]{Tpof-in-hand.png}
+  \caption{\G{d_god}～\G{g_duty}～\G{b_beauty}～\G{a_transform}～\G{r_exile}（来源：\cite{hierogram}）}
+\end{figure}
+
+\vspace*{1cm}
+\clearpage
+\section{前言}
+《巴别塔圣歌》中各民族的语言文字自成体系，耐人寻味。为方便玩家在游戏之余进一步研究这些语言，我们编写了这本字典。
+
+本字典收录游戏中五个民族的全部字符。正文按释义读音排列，正文前附检字表：各语言均设部首（classifier radicals）检字表，信徒语另设义符（semantic radicals）检字表。各语言之后均附说明，介绍其语法与文字特点。
+
+限于编者水平，书中错漏之处在所难免，恳请广大读者批评指正，以便今后修订，不断提高质量。
+
+\hfill JiansheRdN
+
+\hfill 2026年11月
+
+\section{略语表}
+本字典中出现的略语如下：
+
+\vspace{2\baselineskip}
+\begin{tabular}{@{}l@{\hspace{3em}}l@{\hspace{2em}}l@{\hspace{2em}}l@{}}
+  \textbf{实词} & \pos{名}：名词； & \pos{动}：动词；   & \pos{形}：形容词； \\[1em]
+                & \pos{方}：方位词； & \pos{数}：数词；   & \pos{代}：代词； \\[1.5em]
+  \textbf{虚词} & \pos{功}：功能词； & \pos{叹}：叹词。   &                    \\
+\end{tabular}
+
+
+
+\DictIndexmatter
+\section{检字表}
+\begin{indextable}{信徒语部首检字表}
+  \indexhead{}{独体字}
+  \indexitem{d_not}
+  \indexitem{d_music}
+  \indexitem{d_plant}
+  \indexitem{d_greetings}
+  \indexitem{d_free}
+  \indexitem{d_up}
+  \indexitem{d_death}
+  \indexitem{d_god}
+  \indexhead{Drverb.png}{部}
+  \indexitem{d_make}
+  \indexitem{d_open}
+  \indexitem{d_love}
+  \indexitem{d_talk}
+  \indexitem{d_see}
+  \indexitem{d_find}
+  \indexitem{d_go}
+  \indexitem{d_help}
+  \indexitem{d_seek}
+  \indexitem{d_close}
+  \indexhead{d_man}{部}
+  \indexitem{d_man}
+  \indexitem{d_you}
+  \indexitem{d_me}
+  \indexitem{d_devotee}
+  \indexitem{d_preacher}
+  \indexitem{d_warrior}
+  \indexhead{Drobject.png}{部}
+  \indexitem{d_instrument}
+  \indexitem{d_pot}
+  \indexitem{d_door}
+  \indexitem{d_lens}
+  \indexitem{d_potion}
+  \indexhead{Drplace.png}{部}
+  \indexitem{d_garden}
+  \indexitem{d_church}
+  \indexitem{d_abbey}
+  \indexitem{d_cemetery}
+\end{indextable}
+
+\begin{indextable}{信徒语义符检字表}
+  \indexhead{}{独立字}
+  \indexitem{d_greetings}
+  \indexitem{d_man}
+  \indexitem{d_not}
+  \indexitem{d_free}
+  \indexhead{d_music}{根}
+  \indexitem{d_music}
+  \indexitem{d_instrument}
+  \indexhead{d_plant}{根}   % 无字体的偏旁可写图片文件名，如 \indexhead{rad_hand.png}{根}
+  \indexitem{d_plant}
+  \indexitem{d_pot}
+  \indexitem{d_garden}
+  \indexhead{Drmake-root.png}{根}
+  \indexitem{d_make}
+  \indexitem{d_up}
+  \indexitem{d_abbey}
+  \indexitem{d_help}
+  \indexitem{d_potion}
+  \indexhead{Dropen-root.png}{根}
+  \indexitem{d_open}
+  \indexhead{Drlove-root.png}{根}
+  \indexitem{d_love}
+  \indexhead{Drdoor-root.png}{根}
+  \indexitem{d_door}
+  \indexhead{youroot.png}{根}
+  \indexitem{d_you}
+  \indexhead{meroot.png}{根}
+  \indexitem{d_me}
+  \indexhead{Drgod-root.png}{根}
+  \indexitem{d_god}
+  \indexitem{d_devotee}
+  \indexitem{d_church}
+  \indexhead{Duwar.png}{根}
+  \indexitem{d_warrior}
+  \indexhead{Drtalk-root.png}{根}
+  \indexitem{d_talk}
+  \indexitem{d_preacher}
+  \indexhead{d_death}{根}
+  \indexitem{d_death}
+  \indexitem{d_cemetery}
+  \indexhead{Drsee-root.png}{根}
+  \indexitem{d_see}
+  \indexitem{d_lens}
+  \indexhead{Drfind-root.png}{根}
+  \indexitem{d_find}
+  \indexhead{goroot.png}{根}
+  \indexitem{d_go}
+  \indexhead{Duquestion.png}{根}
+  \indexitem{d_seek}
+  \indexhead{Drclose-root.png}{根}
+  \indexitem{d_close}
+\end{indextable}
+
+\begin{indextable}{战士语部首检字表}
+  \indexhead{}{独体字}
+  \indexitem{g_plural}
+  \indexitem{g_moon}
+  \indexitem{g_call}
+  \indexitem{g_bottle}
+  \indexitem{g_balance}
+  \indexitem{g_key}
+  \indexitem{g_fortress}
+  \indexitem{g_treasure}
+  \indexitem{g_big}
+  \indexitem{g_small}
+  \indexitem{g_crate}
+  \indexitem{g_trolley}
+  \indexitem{g_vessel}
+  \indexitem{g_instrument}
+  \indexitem{g_music}
+  \indexitem{g_not}
+  \indexitem{g_duty}
+  \indexitem{g_weapon}
+  \indexhead{Wrman.png}{部}
+  \indexitem{g_warrior}
+  \indexitem{g_death}
+  \indexitem{g_impure}
+  \indexitem{g_bellman}
+  \indexitem{g_chosen}
+  \indexitem{g_scientist}
+  \indexhead{}{{\SymbolFont ⌵}部}
+  \indexitem{g_wait}
+  \indexitem{g_lay}
+  \indexitem{g_push}
+  \indexitem{g_seek}
+  \indexitem{g_make}
+  \indexitem{g_protect}
+  \indexitem{g_carry}
+  \indexitem{g_fear}
+  \indexitem{g_love}
+  \indexitem{g_go}
+  \indexitem{g_help}
+\end{indextable}
+
+\clearpage
+
+\begin{indextable}{诗人语部首检字表}
+  \indexhead{Brnoun.png}{部\\（独体字）}
+  \indexitem{b_plural}%2
+  \indexitem{b_not}
+  \indexitem{b_idiot}
+  \indexitem{b_instrument}
+  \indexitem{b_greetings}%3
+  \indexitem{b_question}
+  \indexitem{b_music}
+  \indexitem{b_comedy}
+  \indexitem{b_hammer}
+  \indexitem{b_pliers}
+  \indexitem{b_free}
+  \indexitem{b_path}
+  \indexitem{b_fire}
+  \indexitem{b_book}
+  \indexitem{b_brother}
+  \indexitem{b_weapon}%4
+  \indexitem{b_saw}
+  \indexitem{b_compass}
+  \indexitem{b_beauty}%5
+  \indexhead{Brplace.png}{部}
+  \indexitem{b_windmill}%3
+  \indexitem{b_north}%4
+  \indexitem{b_east}
+  \indexitem{b_south}
+  \indexitem{b_abbey}
+  \indexitem{b_theatre}
+  \indexitem{b_west}%5
+  \indexitem{b_fortress}
+  \indexitem{b_agora}
+  \indexhead{Brverb.png}{部}
+  \indexitem{b_go}%4
+  \indexitem{b_be}
+  \indexitem{b_love}
+  \indexitem{b_play}
+  \indexitem{b_ascend}
+  \indexitem{b_seek}
+  \indexitem{b_find}
+  \indexitem{b_carry}%5
+  \indexhead{b_man}{部}
+  \indexitem{b_bard}%3
+  \indexitem{b_man}
+  \indexitem{b_monster}
+  \indexitem{b_you}
+  \indexitem{b_warrior}%4
+  \indexitem{b_me}
+\end{indextable}
+
+\begin{indextable}{炼金术师语部首检字表}
+  \indexhead{}{独体字}
+  \indexitem{a_fear}
+  \indexitem{a_fire}
+  \indexitem{a_formula}
+  \indexitem{a_plural}
+  \indexitem{a_not}
+  \indexitem{a_door}
+  \indexhead{Arman.png}{部}
+  \indexitem{a_brother}
+  \indexitem{a_fairy}
+  \indexitem{a_alchemist}
+  \indexitem{a_bard}
+  \indexitem{a_monster}
+  \indexitem{a_warrior}
+  \indexhead{}{{\SymbolFont ⫯}部}
+  \indexitem{a_you}
+  \indexitem{a_brother}
+  \indexitem{a_me}
+  \indexhead{Arobject.png}{部}
+  \indexitem{a_death}
+  \indexitem{a_plant}
+  \indexitem{a_book}
+  \indexhead{Arplace.png}{部}
+  \indexitem{a_library}
+  \indexitem{a_refectory}
+  \indexitem{a_laboratory}
+  \indexitem{a_mine}
+  \indexhead{Arverb.png}{部}
+  \indexitem{a_find}
+  \indexitem{a_transform}
+  \indexitem{a_help}
+  \indexitem{a_open}
+  \indexitem{a_close}
+  \indexitem{a_make}
+  \indexitem{a_seek}
+  \indexhead{}{{\SymbolFont △}部}
+  \indexitem{a_copper}
+  \indexitem{a_gold}
+  \indexitem{a_silver}
+  \indexitem{a_carbon}
+  \indexhead{a_0}{部}
+  \indexitem{a_1}
+  \indexitem{a_2}
+  \indexitem{a_3}
+  \indexitem{a_4}
+  \indexitem{a_5}
+  \indexitem{a_6}
+  \indexitem{a_7}
+  \indexitem{a_8}
+  \indexitem{a_9}
+  \indexitem{a_0}
+\end{indextable}
+
+\begin{indextable}{隐士语检字表}
+  \indexhead{}{（笔画排序）}
+  \indexitem{r_you}
+  \indexitem{r_me}
+  \indexitem{r_not}
+  \indexitem{r_plural}
+  \indexitem{r_up}
+  \indexitem{r_death}
+  \indexitem{r_greetings}
+  \indexitem{r_wait}
+  \indexitem{r_us}
+  \indexitem{r_exile}
+  \indexitem{r_tower}
+  \indexitem{r_fear}
+  \indexitem{r_help}
+  \indexitem{r_open}
+  \indexitem{r_door}
+  \indexitem{r_people}
+  \indexitem{r_stranger}
+  \indexitem{r_talk}
+  \indexitem{r_seek}
+  \indexitem{r_go}
+  \indexitem{r_ascend}
+  \indexitem{r_man}
+  \indexitem{r_die}
+  \indexitem{r_mypeople}
+  \indexitem{r_disregard}
+  \indexitem{r_make}
+  \indexitem{r_stop}
+  \indexitem{r_come}
+  \indexitem{r_revive}
+  \indexitem{r_key}
+\end{indextable}
+
+% ======================= 正文 =======================
+\DictMainmatter
+\begin{entries}[\DictLangTitle{信徒语\G{d_devotee}}{The Devotees' Language}]
+\entry{d_love}{动}{\sense{1}爱。\sense{2}喜爱；热爱。} %ai
+\entry{d_greetings}{叹}{\sense{1}打招呼；寒暄。\sense{2}告别。} %Da
+\entry{d_you}{代}{第二人称单数人称代词，即“你”。} %Di
+\entry{d_me}{代}{第一人称单数人称代词，即“我”。} %Di
+\entry{d_not}{功}{否定词。} %Fou
+\entry{d_close}{}{\sense{动}关闭。*\sense{形}关闭的。} %Guanbi
+\entry{d_pot}{名}{罐子。} %guanzi
+\entry{d_preacher}{名}{教士。} %jiaos
+\entry{d_church}{名}{\sense{1}教堂。\sense{2}教会。} %jiaot
+\entry{d_help}{动}{救助；帮助。} %jiu
+\entry{d_open}{}{\sense{动}开启。*\sense{形}开启的。} %Kai
+\entry{d_see}{动}{看。} %kan
+\entry{d_door}{名}{门。} %Men
+\entry{d_cemetery}{名}{墓园。} %mu
+\entry{d_man}{名}{\sense{1}人；凡人。\sense{2}人类。} %ren
+\entry{d_up}{}{\sense{方}上方；上面。\sense{形}伟大。} %shang
+\entry{d_god}{名}{神。} %shen
+\entry{d_talk}{动}{说；交流。} %shuo
+\entry{d_death}{}{\sense{名}死亡。\sense{动}死亡；去死。*\sense{形}死去的。} %si
+\entry{d_lens}{名}{透镜。} %tou
+\entry{d_devotee}{名}{（特指第一层的）信徒。} %xin
+\entry{d_abbey}{名}{修道院。} %xiu
+\entry{d_seek}{动}{\sense{1}寻找。\sense{2}欲求。} %xun
+\entry{d_key}{名}{钥匙。} %yaoshi
+\entry{d_potion}{名}{药水。} %yaoshui
+\entry{d_music}{名}{音乐。} %yin
+\entry{d_instrument}{名}{乐器。} %yue
+\entry{d_warrior}{名}{（特指第二层的）战士。} %zhan
+\entry{d_find}{动}{\sense{1}找到。\sense{2}得到。} %zhao
+\entry{d_plant}{名}{植物。} %zhiwu
+\entry{d_garden}{名}{植物园；花园。} %zhiwuy
+\entry{d_make}{动}{\sense{1}制作；制造。\sense{2}演奏：\G{d_instrument}～\G{d_music} | 乐器演奏音乐。} %zhiz
+\entry{d_free}{}{*\sense{名}自由。\sense{形}自由的。} %Zi
+\entry{d_go}{动}{\sense{1}走路。\sense{2}走去；走到。\sense{3}通过（关卡）。} %zou
+% ----------------------- 说明（排在条目后空着的一栏） -----------------------
+\begin{dictnotes}
+信徒语为《巴别塔圣歌》第一层信徒所使用的语言，使用SVO（主语、谓语/动词、宾语）语序。其书写系统为以象形为基础的表意文字，部分字由几个基础字组合而成。正文前的检字表分别按\emph{\textbf{部首}}和基础\emph{\textbf{义符}}列出了游戏内所有的信徒语字符。
+
+信徒语未见疑问词或疑问标记，现存语料中疑问句与陈述句在形式上无区别。信徒语没有特别的复数记号，以重叠表示复数，人称代词同，如“我们”：“\G{d_med_me}”。信徒语没有系动词（相当于“是”或英语的\emph{be}），判断句直接把主语和表语并列。此外，信徒语中否定词置于动词前。以下是一些信徒语例句：
+
+\dictexample{d_preacherd_notd_garden}{“教士不（在）花园。”}
+\dictexample{d_med_med_loved_music}{“我们爱音乐。”}
+\dictexample{d_youd_seekd_god}{“你寻找神吗？”或“你寻找神。”}
+\end{dictnotes}
+% 各词性意思不同时：词性参数留空，写在各义项里
+% 图片示例（图片放在 img/ 文件夹）：\entry{rad_hand.png}{名}{……行内也可用 \G{rad_hand.png}。}
+\end{entries}
+
+\begin{entries}[\DictLangTitle{战士语\G{g_warrior}}{The Warriors' Language}]
+\entry{g_love}{动}{\sense{1}爱。\sense{2}喜爱；热爱。} %ai
+\entry{g_small}{形}{\sense{1}矮的。\sense{2}小的。} %aixiao
+\entry{g_protect}{动}{保护。} %baoh
+\entry{g_treasure}{名}{宝藏。} %baoz
+\entry{g_weapon}{名}{兵器。} %bingqi
+\entry{g_impure}{名}{不洁之人；（特指第一层的）信徒。} %bujie
+\entry{g_fortress}{名}{城堡；堡垒。} %chengb
+\entry{g_vessel}{名}{\sense{1}船。\sense{2}游戏中的虚构星座之一。} %chuan
+\entry{g_wait}{动}{等候；等待。} %deng
+\entry{g_lay}{动}{\sense{1}放下。\sense{2}收起。} %fang
+\entry{g_not}{功}{否定词。} %Fou
+\entry{g_plural}{功}{复数标记。} %fu
+\entry{g_big}{形}{\sense{1}高的。\sense{2}大的。} %gao
+\entry{g_fear}{动}{害怕；恐惧。} %haip
+\entry{g_help}{动}{救助；帮助。} %jiu
+\entry{g_bottle}{名}{瓶子。} %ping
+\entry{g_chosen}{名}{神选之人；（特指第三层的）诗人。} %shengxuan
+\entry{g_death}{名}{死亡。} %si
+\entry{g_sun}{名}{太阳。} %taiyang
+\entry{g_balance}{名}{\sense{1}天平。\sense{2}游戏中的虚构星座之一。} %tianp
+\entry{g_push}{动}{\sense{1}推。\sense{2}阻止：\G{g_warrior}～\G{g_impure} | 战士阻止不洁之人。} %tui
+\entry{g_trolley}{名}{推车。} %tuiche
+\entry{g_crate}{名}{箱子。} %xiangzi
+\entry{g_carry}{动}{\sense{1}携带。\sense{2}运输。\sense{3}手操（工具）：\G{g_pluralg_warrior}～\G{g_weapon} | 战士们操兵器。\sense{4}承担：\G{g_warrior}～\G{g_duty} | 战士承担天责。} %xie
+\entry{g_scientist}{名}{学者；（特指第四层的）炼金术师。} %xuezhe
+\entry{g_seek}{动}{\sense{1}寻找。\sense{2}欲求。} %xun
+\entry{g_key}{名}{\sense{1}钥匙。\sense{2}游戏中的虚构星座之一。} %yaoshi
+\entry{g_music}{名}{音乐。} %yin
+\entry{g_moon}{名}{月亮。} %yueliang
+\entry{g_instrument}{名}{\sense{1}乐器。\sense{2}游戏中的虚构星座之一。} %yueqi
+\entry{g_duty}{名}{\sense{1}责任。\sense{2}天责：\G{g_pluralg_warriorg_carry}～ \G{} | 战士们承担天责。} %zeren
+\entry{g_warrior}{名}{（特指第二层的）战士。} %zhan
+\entry{g_call}{名}{召唤。} %zhao
+\entry{g_make}{动}{\sense{1}制作；制造。\sense{2}建造。\sense{3}演奏：\G{g_instrument}～\G{g_music} | 乐器演奏音乐。} %zhiz
+\entry{g_bellman}{名}{撞钟人。} %zhuang
+\entry{g_go}{动}{\sense{1}走路。\sense{2}走去；走到；走来。\sense{3}通过（关卡）。} %zou
+
+% ----------------------- 说明（排在条目后空着的一栏） -----------------------
+\begin{dictnotes}
+战士语为《巴别塔圣歌》第二层战士所使用的语言，使用SVO（主语、谓语/动词、宾语）语序。其书写系统为表意文字，字形按词类呈现出系统性，其中名词多为象形，动词则共用一个菱形构件。正文前的检字表按\emph{\textbf{部首}}列出了游戏内所有的战士语字符。
+
+与信徒语不同，战士语用一个置于名词前的复数标记表示复数，但同样没有系动词（相当于“是”或英语的 \emph{be}）。战士语没有第一、二人称代词，说话人提及自己或对方时直接使用指人名词。战士语否定词置于动词前。此外，战士语中命令句十分常见。以下是一些战士语例句：
+
+\dictexample{g_gog_trolley}{“去推车（那里）。”}
+\dictexample{g_pluralg_warriorg_waitg_callg_pluralg_chosen}{“战士们等候神选之人们的召唤。”}
+\dictexample{g_warriorg_notg_fearg_death}{“战士们不怕死。”}
+\end{dictnotes}
+% 各词性意思不同时：词性参数留空，写在各义项里
+% 图片示例（图片放在 img/ 文件夹）：\entry{rad_hand.png}{名}{……行内也可用 \G{rad_hand.png}。}
+\end{entries}
+
+\begin{entries}[\DictLangTitle{诗人语\G{b_bard}}{The Bards' Language}]
+\entry{b_agora}{名}{阿哥拉，即广场。} %agela
+\entry{b_love}{动}{\sense{1}爱。\sense{2}喜爱；热爱。} %ai
+\entry{b_north}{方}{北边；北方。} %bei
+\entry{b_weapon}{名}{兵器。} %bingqi
+\entry{b_fortress}{名}{城堡；堡垒。} %chengb
+\entry{b_hammer}{名}{锤子。} %chui
+\entry{b_greetings}{叹}{\sense{1}打招呼；寒暄。\sense{2}告别。} %Da
+\entry{b_path}{名}{道路。} %daolu
+\entry{b_you}{代}{第二人称单数人称代词，即“你”。} %Di
+\entry{b_me}{代}{第一人称单数人称代词，即“我”。} %wo
+\entry{b_east}{方}{东边；东方。} %dong
+\entry{b_windmill}{名}{风车磨坊。} %fengche
+\entry{b_not}{功}{否定词。} %Fou
+\entry{b_plural}{功}{复数标记。} %fu
+\entry{b_monster}{名}{怪物。} %guaiw
+\entry{b_fire}{名}{火。} %huo
+\entry{b_pliers}{名}{剪子；剪刀。} %jianzi
+\entry{b_theatre}{名}{剧场。} %juchang
+\entry{b_saw}{名}{锯子。} %juzi
+\entry{b_compass}{名}{罗盘。} %luopan
+\entry{b_beauty}{}{\sense{名}美。\sense{形}美丽的。} %mei
+\entry{b_south}{方}{南边；南方。} %nan
+\entry{b_ascend}{}{\sense{动}攀登；上升。\sense{方}上方；上面。} %pand
+\entry{b_man}{名}{\sense{1}人；凡人。\sense{2}人类。} %ren
+\entry{b_bard}{名}{（特指第三层的）诗人。} %shir
+\entry{b_book}{名}{书本。} %shub
+\entry{b_be}{动}{系动词，即“是”。} %xid
+\entry{b_west}{方}{西边；西方。} %xi
+\entry{b_abbey}{名}{修道院。} %xiu
+\entry{b_carry}{动}{\sense{1}携带。\sense{2}运输。\sense{3}手操（工具）。} %xied
+\entry{b_comedy}{名}{喜剧。} %xiju
+\entry{b_brother}{名}{\sense{1}兄弟。\sense{2}同胞；特指（第四层的）炼金术师。} %xiongdi
+\entry{b_seek}{动}{\sense{1}寻找。\sense{2}欲求。} %xun
+\entry{b_music}{名}{音乐。} %yin
+\entry{b_question}{功}{疑问词。} %Yiw
+\entry{b_play}{动}{\sense{1}游戏；嬉戏。\sense{2}演奏。\sense{3}表演。} %youxi
+\entry{b_instrument}{名}{乐器。} %yueqi
+\entry{b_idiot}{}{\sense{名}愚人。\sense{形}愚蠢的。} %yur
+\entry{b_warrior}{名}{（特指第二层的）战士。} %zhan
+\entry{b_find}{动}{\sense{1}找到。\sense{2}得到。} %zhao
+\entry{b_free}{}{*\sense{名}自由。\sense{形}自由的。} %Zi
+\entry{b_go}{动}{\sense{1}走路。\sense{2}走去；走到；走来。\sense{3}通过（关卡）。} %zou
+
+% ----------------------- 说明（排在条目后空着的一栏） -----------------------
+\begin{dictnotes}
+诗人语是《巴别塔圣歌》第三层诗人所使用的语言。其语序为 OSV（宾语、主语、谓语/动词），故常被翻译为文言语序。其书写系统为表意文字，字形多有一条横线贯穿，书写成句时各字由横线相连。字形按词类呈现出系统性，其中指人词的笔画均穿过横线，方所词在横线下有一点，动词则在右上角有一点。正文前的检字表按\emph{\textbf{部首}}列出了游戏内所有的诗人语字符。
+
+与信徒语、战士语不同，诗人语有专门的系动词（相当于“是”或英语的 \emph{be}）。复数标记一律置于名词之后，人称代词同，如“我们”：“\G{b_meb_plural}”。疑问词或否定词置于句首与句尾，形成包围结构。以下是一些诗人语例句：
+
+\dictexample{b_ascendb_idiotb_bardb_seek}{“登升者，愚诗人之所寻。”}
+\dictexample{b_questionb_comedyb_youb_loveb_question}{“喜剧者，你之所爱耶？”}
+\dictexample{b_notb_monsterb_bardb_pluralb_seekb_not}{“怪物者，诗人们之不欲。”}
+\end{dictnotes}
+% 各词性意思不同时：词性参数留空，写在各义项里
+% 图片示例（图片放在 img/ 文件夹）：\entry{rad_hand.png}{名}{……行内也可用 \G{rad_hand.png}。}
+\end{entries}
+
+\begin{entries}[\DictLangTitle{炼金术师语\G{a_alchemist}}{The Alchemists' Language}]
+\entry{a_you}{代}{第二人称单数人称代词，即“你”。} %Di
+\entry{a_me}{代}{第一人称单数人称代词，即“我”。} %di
+\entry{a_not}{功}{否定词。} %Fou
+\entry{a_plural}{功}{复数标记。} %fu
+\entry{a_monster}{名}{怪物。} %guaiwu
+\entry{a_close}{}{\sense{动}关闭。\sense{形}关闭的。} %Guanbi
+\entry{a_fear}{动}{害怕；恐惧。} %haip
+\entry{a_fire}{名}{火。} %huo
+\entry{a_gold}{名}{金元素。} %jiny
+\entry{a_fairy}{名}{精灵；（特指第五层的）隐士。} %jingl
+\entry{a_help}{动}{救助；帮助。} %jiu
+\entry{a_open}{}{\sense{动}开启。\sense{形}开启的。} %Kai
+\entry{a_mine}{名}{矿场。} %kuangc
+\entry{a_alchemist}{名}{（特指第四层的）炼金术师。} %lianj
+\entry{a_door}{名}{门。} %Men
+\entry{a_formula}{名}{\sense{1}配方。\sense{2}公式。} %peif
+\entry{a_bard}{名}{（特指第三层的）诗人。} %shir
+\entry{a_refectory}{名}{食堂。} %shitang
+\entry{a_laboratory}{名}{实验室。} %shiy
+\entry{a_book}{名}{书本。} %shub
+\entry{a_death}{名,动}{死亡。} %si
+\entry{a_carbon}{名}{碳元素。} %tany
+\entry{a_copper}{名}{铜元素。} %tongy
+\entry{a_library}{名}{图书馆。} %tushug
+\entry{a_brother}{名}{\sense{1}兄弟。\sense{2}同胞；特指（第三层的）诗人。} %xiongd
+\entry{a_seek}{动}{\sense{1}寻找。\sense{2}欲求；希望。} %xun
+\entry{a_silver}{名}{银元素。} %yinyuansu
+\entry{a_warrior}{名}{（特指第二层的）战士。} %zhan
+\entry{a_find}{动}{\sense{1}找到。\sense{2}发现。} %zhao
+\entry{a_plant}{名}{植物。} %zhiwu
+\entry{a_make}{动}{\sense{1}制作；制造。\sense{2}建造。\sense{3}生（火）：～\G{a_fire} | 生火。} %zhiz
+\entry{a_transform}{名}{\sense{1}变换。\sense{2}【炼金术术语】转化。\sense{3}【生物学术语】变态。} %zhuanh
+\entry{a_1}{数}{1；一。} 
+\entry{a_2}{数}{2；二。} 
+\entry{a_3}{数}{3；三。} 
+\entry{a_4}{数}{4；四。} 
+\entry{a_5}{数}{5；五。} 
+\entry{a_6}{数}{6；六。} 
+\entry{a_7}{数}{7；七。} 
+\entry{a_8}{数}{8；八。} 
+\entry{a_9}{数}{9；九。} 
+\entry{a_0}{数}{0；零。} 
+
+% ----------------------- 说明（排在条目后空着的一栏） -----------------------
+\begin{dictnotes}
+炼金术师语是《巴别塔圣歌》第四层炼金术师所使用的语言。其语序为 SOV（主语、谓语/动词、宾语）。其书写系统为表意文字，字形按词类呈现出系统性。正文前的检字表按\emph{\textbf{部首}}列出了游戏内所有的炼金术师语字符。
+
+炼金术师语同样没有系动词（相当于“是”或英语的 \emph{be}）；其复数标记置于名词后，否定词则置于动词前。炼金术师语中同样以单数人称代词加以复数标记表示复数人称代词，如“我们”：“\G{a_mea_plural}”。炼金术师语现有语料中未出现疑问句，故没有疑问词。以下是一些炼金术师语例句：
+
+\dictexample{a_fairya_plurala_makea_door}{“精灵们建造（了）门。”}
+\dictexample{a_mea_finda_booka_barda_plural}{“我找到了关于诗人们的书。”}
+\dictexample{a_refectorya_opena_8}{“食堂八（点）开门。”}
+
+炼金术师语是《巴别塔圣歌》游戏中唯一有数字系统的语言，可以表示从0到9999中的任何数。炼金术师数字采用规律的十进制。以下是一些炼金术师数字例子：
+
+\dictexample{a_1a_3a_4a_5}{“1345”}
+\dictexample{a_2a_0a_7a_1}{“2071”}
+\end{dictnotes}
+% 各词性意思不同时：词性参数留空，写在各义项里
+% 图片示例（图片放在 img/ 文件夹）：\entry{rad_hand.png}{名}{……行内也可用 \G{rad_hand.png}。}
+\end{entries}
+
+\begin{entries}[\DictLangTitle{隐士语\G{r_mypeople}}{The Anchorites' Language}]
+\entry{r_greetings}{叹,动}{\sense{1}打招呼；寒暄。\sense{2}告别。} %Da
+\entry{r_wait}{动}{等候。} %dengh
+\entry{r_you}{代}{第二人称单数人称代词，即“你”。} %Di
+\entry{r_me}{代}{第一人称单数人称代词，即“我”。} %di
+\entry{r_us}{代}{第一人称复数人称代词，即“我们”。（字形：\G{r_me}+\G{r_plural}）} %di
+\entry{r_exile}{名}{放逐。} %fang
+\entry{r_not}{功}{否定词。} %Fou
+\entry{r_revive}{动}{复活；使复活，拯救：\G{r_you}～\G{r_tower} | 你拯救（了）高塔。（字形：\G{r_not}+\G{r_go}+\G{r_death}）}
+\entry{r_plural}{功}{复数标记。} %fushu
+\entry{r_tower}{名}{\sense{1}高塔。\sense{2}专指游戏中的巴别塔。} %gao
+\entry{r_fear}{动}{害怕；恐惧；担忧。} %haip
+\entry{r_help}{动}{救助；帮助。} %jiu
+\entry{r_open}{}{\sense{动}开启。*\sense{形}开启的。} %Kai
+\entry{r_door}{名}{门。复数：\G{r_doors}} %Men
+\entry{r_people}{名}{民族。复数：\G{r_peoples}} %minzu
+\entry{r_stranger}{名}{\sense{1}陌生人。\sense{2}外国人；外族人。（字形：\G{r_not}+\G{r_me}）} %moshengr
+\entry{r_ascend}{动}{攀登。（字形：\G{r_go}+\G{r_up}）} %pand
+\entry{r_man}{名}{\sense{1}人；凡人。\sense{2}人类。} %ren
+\entry{r_up}{方}{上方；上面。} %shang
+\entry{r_talk}{动}{说；交流。} %shuo
+\entry{r_death}{名}{死亡。} %si
+\entry{r_die}{动}{死亡；去死。（字形：\G{r_go}+\G{r_death}）} %si
+\entry{r_mypeople}{名}{我族；特指（第五层的）隐士。（字形：\G{r_me}+\G{r_people}）} %si
+\entry{r_disregard}{动}{无视。（字形：\G{r_not}+\G{r_seek}）} %wushi
+\entry{r_seek}{动}{\sense{1}寻找。\sense{2}欲求；希望。} %xun
+\entry{r_key}{名}{钥匙。} %yaoshi
+\entry{r_make}{动}{\sense{1}制作；制造。\sense{2}建造。} %zhiz
+\entry{r_stop}{动}{终止；停止。（字形：\G{r_not}+\G{r_go}）}
+\entry{r_come}{动}{走来；过来。（字形：\G{r_go}+\G{r_me}）} %zoulai
+\entry{r_go}{动}{\sense{1}走路。\sense{2}走去；走到。} %zoulu
+
+
+% ----------------------- 说明（排在条目后空着的一栏） -----------------------
+\begin{dictnotes}
+隐士语语是《巴别塔圣歌》第五层隐士所使用的语言。其语序为 SOV（主语、谓语/动词、宾语）。其书写系统为高度抽象的表意文字，有会意现象。正文前的字根检字表按\emph{\textbf{基础字}}列出了游戏内所有的隐士语字符，正文中组合字注明其构成。
+
+隐士语同样没有系动词（相当于“是”或英语的 \emph{be}）；其复数标记一般和所修饰对象形成组合字，否定词则置于动词前。隐士语没有疑问词，现存语料中疑问句与陈述句在形式上无区别。以下是一些隐士语例句：
+
+\dictexample{r_usr_greetingsr_peoplesr_tower}{“我们向塔内的各民族问好。”}
+\dictexample{r_usr_fearr_die}{“我们害怕死亡。”或“我们害怕死亡吗？”}
+\dictexample{r_notr_stopr_me}{“不要阻止我！”}
+\end{dictnotes}
+% 各词性意思不同时：词性参数留空，写在各义项里
+% 图片示例（图片放在 img/ 文件夹）：\entry{rad_hand.png}{名}{……行内也可用 \G{rad_hand.png}。}
+\end{entries}
+
+% ======================= 附录 =======================
+\DictAppendix
+\section{附录一　{\DictGlyphFont{COSGlyphs}}字体}
+本字典使用{\DictGlyphFont{COSGlyphs}}渲染游戏字符。以下附上下载链接，以便各位玩家及爱好者下载使用。使用方法详见\texttt{README.pdf}。
+
+\url{https://github.com/Wolceorght/COSGlyphs}
+
+\clearpage
+
+\section{附录二　相关链接}
+以下是有关《巴别塔圣歌》游戏的一些网页链接，供各位玩家及爱好者参考：
+
+\begin{enumerate}
+\item 游戏官方
+  \begin{enumerate}
+  \item《巴别塔圣歌》官网：\\ \url{https://www.focus-entmt.com/en/games/chants-of-sennaar}
+  \end{enumerate}
+  
+\item 游戏下载
+  \begin{enumerate}
+  \item Steam \\ \url{https://store.steampowered.com/app/1931770/Chants_of_Sennaar/}
+  \item Googleplay \\ \url{https://play.google.com/store/apps/details?id=com.playdigious.chantsofsennaar&hl=zh-cn} 
+  \item AppStore \\ \url{https://apps.apple.com/us/app/chants-of-sennaar/id6566195667}
+  \end{enumerate}
+  
+\item 粉丝维基
+  \begin{enumerate}
+  \item 《巴别塔圣歌》粉丝维基（Miraheze）：\\ \url{https://chantsofsennaar.miraheze.org/wiki/Main_Page}
+  \item 《巴别塔圣歌》粉丝维基（Fandom）：\\ \url{https://chants-of-sennaar.fandom.com/wiki/Chants_of_Sennaar_Wiki}
+  \end{enumerate}
+
+\item 粉丝字体和输入程序
+  \begin{enumerate}
+  \item {\DictGlyphFont{COSGlyphs}}：\\ \url{https://github.com/Wolceorght/COSGlyphs}
+  \item “也许是巴别塔圣歌字体”：\\ \url{https://pan.quark.cn/s/b3b0c26be572?pwd=iXyF}
+  \item 《巴别塔圣歌》字符抄录本（有自造拓展字）：\\ \url{https://eoviniaashka.github.io/-/}
+  \end{enumerate}
+
+\item 游戏攻略
+  \begin{enumerate}
+  \item 巴别塔游戏地图（英文）：\\ \url{https://drive.google.com/file/d/1oMwa5VX9f_SC7OLVwaZgQgD85VavDPJW/view}
+  \end{enumerate}
+  
+\end{enumerate}
+
+\clearpage
+\begin{thebibliography}{9}
+\item[] 本书翻译主要参考了\cite{rundisc}；检字表分类主要参考了\cite{wikiradical,wikiety}。例句主要取自\cite{wikisentence}。
+\bibitem{wikisentence} All sentences in game. (2026, June 5). In \emph{Chants of Sennaar}. \url{https://chantsofsennaar.miraheze.org/wiki/All_sentences_in_game}
+\bibitem{wikiety} Etymology. (2026, February 8). In \emph{Chants of Sennaar}. \url{https://chantsofsennaar.miraheze.org/wiki/Etymology}
+\bibitem{cos-poster} Focus Entertainment. (2023). [\emph{Chants of Sennaar} key art] [Digital image]. Steam. \url{https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1931770/header.jpg}
+\bibitem{wikiradical} Radicals. (2025, September 6). In \emph{Chants of Sennaar}. \url{https://chantsofsennaar.miraheze.org/wiki/Radicals}
+\bibitem{hierogram} Rhythm\_the\_Raptor. (2024, April 20). \emph{here it is! pardon the quality, my phone isn't the newest lol (also sorry it's not spoiled I couldn't figure \ldots)} [Comment on the online forum post \emph{What.... exactly is the shape of that glyph thing? (SPOILERS FOR ENDGAME)}]. Reddit. \url{https://www.reddit.com/r/ChantsofSennaar/comments/1c8k07n/comment/l0fuin2/}
+\bibitem{rundisc} Rundisc. (2023). \emph{Chants of Sennaar} [Video game]. Focus Entertainment.
+\bibitem{opening} WiseClock. (2023, December 29). [\emph{Chants of Sennaar} 开场界面截图] [Digital image]. 木是伊说. \url{https://www.wiseclock.ca/usr/uploads/2023/12/986450389.jpg}
+\end{thebibliography}
+
+\end{document}

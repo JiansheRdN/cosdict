@@ -1,0 +1,378 @@
+% cosdict.sty —《巴别塔圣歌》字典版式（紧凑版，仿《现代汉语词典》）
+% 需用 XeLaTeX 编译，LaTeX 内核 2022-06 或更新。字体在主文件中设置，本宏包只负责版式。
+\NeedsTeXFormat{LaTeX2e}[2022/06/01]
+\ProvidesPackage{cosdict}[2026/11/10 v2 Chants of Sennaar dictionary layout]
+
+\RequirePackage{fontspec}
+\RequirePackage{fancyhdr}
+\RequirePackage{titlesec}
+\RequirePackage[nottoc,notlot,notlof]{tocbibind} % 参考文献自动进目录
+\RequirePackage{multicol}
+\RequirePackage{pifont}                         % 义项序号 ❶❷❸
+\RequirePackage{changepage}                     % 目录页收窄
+\RequirePackage{zref-savepos,zref-abspage}      % 记录条目所在页与左右栏
+\zref@addprop{savepos}{abspage}
+
+% ---------------------------------------------------------------
+% 字体接口（在主文件中重新定义）
+% ---------------------------------------------------------------
+\providecommand\DictTitleFont{}   % 标题：华文中宋 + Palatino Linotype
+\providecommand\DictGlyphFont{}   % 游戏字符：COSGlyph
+
+% ---------------------------------------------------------------
+% 游戏字符的行内输入
+%   \G{d_man}                        可用于任何命令的参数中（条目、标题、目录、检字表）
+%   \begin{glyphs}d_man\end{glyphs}  行内环境；不可放在其他命令的参数里
+% ---------------------------------------------------------------
+% 没有现成字体的偏旁用图片代替：参数中含“.”即视为图片文件名，
+%   如 \G{rad_hand.png}；图片放在 ../common/img/ 文件夹（见 \graphicspath），高度约与字符相同
+%   （各语言版共用的字根图片放 ../common/img/；本版专有图片可放本版 img/）
+\RequirePackage{graphicx}
+\graphicspath{{../common/img/}{img/}}
+\newcommand\DictImgHeight{0.8em}  % 图片高度
+\newcommand\DictImgRaise{0em}     % 图片相对基线的升降
+\ExplSyntaxOn
+\NewDocumentCommand \G { m }
+  {
+    \str_if_in:nnTF {#1} {.}
+      { \raisebox { \DictImgRaise }
+          { \includegraphics [ height = \DictImgHeight ] { \tl_to_str:n {#1} } } }
+      { { \DictGlyphFont \tl_to_str:n {#1} } }
+  }
+\ExplSyntaxOff
+\newenvironment{glyphs}
+  {\catcode`\_=12\relax\DictGlyphFont\ignorespaces}
+  {\unskip}
+
+% ---------------------------------------------------------------
+% 版心（仿《现代汉语词典》，页边距紧凑）
+% ---------------------------------------------------------------
+\RequirePackage[a4paper, includehead, includefoot,
+  top=12mm, bottom=10mm, inner=16mm, outer=12mm,
+  headheight=14pt, headsep=4mm, footskip=6mm]{geometry}
+
+% ---------------------------------------------------------------
+% 页眉：模式 0 只有页码；1 正文（本页首字—末字）；2 检字表（“检字表”）
+%   1、2 两种模式下页眉有横线；检字表另在版心底部加横线（仿现汉）
+% ---------------------------------------------------------------
+\NewMarkClass{dict-glyph}
+\newcommand\Dict@headmode{0}
+\newcommand\DictIndexHeader{检字表}  % 检字表页的页眉文字
+
+\ExplSyntaxOn
+\cs_new_protected:Npn \__dict_range:nn #1#2
+  {
+    \tl_set:Ne \l_tmpa_tl {#1}
+    \tl_set:Ne \l_tmpb_tl {#2}
+    \exp_args:NV \G \l_tmpa_tl
+    \tl_if_eq:NNF \l_tmpa_tl \l_tmpb_tl { \,--\, \exp_args:NV \G \l_tmpb_tl }
+  }
+\NewDocumentCommand \DictGuide { }
+  {
+    \str_case:on { \Dict@headmode }
+      {
+        {1} { % 本页没有条目（如只有说明）时，first 与 top 相同：页眉留空
+              \IfMarksEqualTF [page] { dict-glyph } { top } { first } { }
+                { \__dict_range:nn { \mark_use_first:nn {page} {dict-glyph} }
+                                   { \mark_use_last:nn  {page} {dict-glyph} } } }
+        {2} { \DictIndexHeader }
+      }
+  }
+\ExplSyntaxOff
+
+\pagestyle{fancy}
+\renewcommand\sectionmark[1]{}
+\fancyhf{}
+\fancyhead[RO]{\ifnum\Dict@headmode>0 \DictGuide\qquad\fi\thepage}
+\fancyhead[LE]{\thepage\ifnum\Dict@headmode>0 \qquad\DictGuide\fi}
+\renewcommand\headrulewidth{\ifnum\Dict@headmode>0 0.4pt\else 0pt\fi}
+\renewcommand\footrulewidth{\ifnum\Dict@headmode=2 0.4pt\else 0pt\fi}
+\fancypagestyle{plain}{}  % 与正文页同
+
+% 为双面排版补出的空白页不显示页码
+\renewcommand\cleardoublepage{%
+  \clearpage
+  \if@twoside\ifodd\c@page\else
+    \hbox{}\thispagestyle{empty}\newpage
+  \fi\fi}
+
+% ---------------------------------------------------------------
+% 分部与页码
+% ---------------------------------------------------------------
+% 目录间距：各条目之间为一般间距（行距 + \DictTocSkip）；
+%   正文前末条与正文首条、正文末条与附录首条之间为一般间距的 \DictTocGroupRatio 倍
+\newcommand\DictTocSkip{1em}          % 一般间距中行距以外的空白（article 默认 1em）
+\newcommand\DictTocGroupRatio{1.25}   % 分组处间距的倍数
+\renewcommand*\l@section[2]{%
+  \ifnum\c@tocdepth>\z@
+    \addpenalty\@secpenalty
+    \addvspace{\DictTocSkip\@plus\p@}%
+    \setlength\@tempdima{1.5em}%
+    \begingroup
+      \parindent\z@\rightskip\@pnumwidth\parfillskip-\@pnumwidth
+      \leavevmode\bfseries
+      \advance\leftskip\@tempdima\hskip-\leftskip
+      #1\nobreak\hfil\nobreak\hb@xt@\@pnumwidth{\hss #2}\par
+    \endgroup
+  \fi}
+% 分组处：目录里写入一段 addvspace，与下一条目自带的间距取较大者，
+%   使基线距离 = 倍数 ×（行距 + \DictTocSkip）
+%   用 \immediate 写入：此时前面各页已输出，保证位置正好在分组处
+\newcommand\Dict@tocgap{\immediate\write\@auxout{\string\@writefile{toc}{\string\addvspace{%
+  \the\dimexpr\DictTocGroupRatio\dimexpr\baselineskip+\DictTocSkip\relax-\baselineskip\relax}}}}
+% 正文前（目录、前言、凡例）：罗马数字
+%   前言等正文前各单元（目录、检字表除外）及附录、参考文献的文字宽度收窄为版心的 \DictFrontWidth，左右居中；
+%   居中的标题、图片、题词不受影响
+\newcommand\DictFrontWidth{0.8}
+\newcommand\Dict@frontskips{%
+  \setlength\leftskip{\dimexpr(\textwidth-\DictFrontWidth\textwidth)/2\relax}%
+  \setlength\rightskip{\leftskip}}
+\newcommand\Dict@noskips{\setlength\leftskip{0pt}\setlength\rightskip{0pt}}
+\newcommand\DictFrontmatter{\cleardoublepage\pagenumbering{roman}\gdef\Dict@headmode{0}\Dict@frontskips}
+% 检字表（仍属正文前，续用罗马数字）：页眉显示“检字表”；恢复全宽
+\newcommand\DictIndexmatter{\cleardoublepage\gdef\Dict@headmode{2}\Dict@noskips}
+% 正文：阿拉伯数字从 1 起；目录中与正文前条目空一行；页眉显示本页首字—末字
+\newcommand\DictMainmatter{\cleardoublepage\pagenumbering{arabic}\Dict@tocgap\gdef\Dict@headmode{1}\Dict@noskips}
+% 附录（含参考文献）：续用阿拉伯数字；目录中与正文空一行；页眉只有页码；
+%   文字宽度与前言相同，收窄为版心的 \DictFrontWidth
+% 列表环境（参考文献、enumerate、itemize、description）会重设段落左右边距，
+%   不受 \leftskip 收窄影响：按当前收窄量在外面另包一层 adjustwidth。
+%   收窄量为 0（正文、检字表）时等于不包；嵌套列表内收窄量已清零，不会重复缩进。
+\newcommand\Dict@narrowlist[1]{%
+  \AddToHook{env/#1/before}{%
+    \edef\Dict@listmargin{\the\leftskip}%
+    \begin{adjustwidth}{\Dict@listmargin}{\Dict@listmargin}\Dict@noskips}%
+  \AddToHook{env/#1/after}{\end{adjustwidth}}}
+\Dict@narrowlist{thebibliography}
+\Dict@narrowlist{enumerate}
+\Dict@narrowlist{itemize}
+\Dict@narrowlist{description}
+\newcommand\DictAppendix{\cleardoublepage\Dict@tocgap\gdef\Dict@headmode{0}\appendix\Dict@frontskips}
+
+% ---------------------------------------------------------------
+% 标题：居中、小二号（18pt）、加粗、无序号（目录、正文各部分、附录、参考文献）
+% ---------------------------------------------------------------
+\setcounter{secnumdepth}{-1}
+\titleformat{\section}
+  {\centering\DictTitleFont\fontsize{18pt}{27pt}\selectfont\bfseries}
+  {}{0pt}{}
+\titlespacing*{\section}{0pt}{2ex plus .5ex}{1.5ex plus .3ex}
+
+% ---------------------------------------------------------------
+% 目录：版面宽度收窄为正文版心的 0.65，左右居中
+%   用 \DictTableOfContents 代替 \tableofcontents
+% ---------------------------------------------------------------
+\newcommand\DictTocWidth{0.65}
+\newcommand\DictTableOfContents{%
+  \begingroup\Dict@noskips % 目录另用 \DictTocWidth，不受正文前收窄影响
+  \begin{adjustwidth}{\dimexpr(\textwidth-\DictTocWidth\textwidth)/2\relax}%
+                     {\dimexpr(\textwidth-\DictTocWidth\textwidth)/2\relax}%
+    \tableofcontents
+  \end{adjustwidth}\endgroup}
+
+% ---------------------------------------------------------------
+% 正文各语言的大标题：中文一行（小二号），西文另起一行（三号）
+%   \begin{entries}[\DictLangTitle{信徒语\G{d_devotee}}{The Devotees’ Language}]
+%   目录中显示为“信徒语（The Devotees’ Language）”
+% ---------------------------------------------------------------
+\newcommand\DictLangSubFont{\fontsize{16pt}{24pt}\selectfont} % 西文副标题：三号
+\NewDocumentCommand\DictLangTitle{m m}{%
+  \section[#1（#2）]{#1\\{\DictLangSubFont #2}}}
+
+% ---------------------------------------------------------------
+% 正文条目
+%   \entry{触发字符串}{词性[,词性...]}{释义}
+%   例：\entry{d_death}{名,动,形}{\sense{1}死；亡。\sense{2}死亡。}
+%   字头占两行高度，释义从字头右侧排起，第三行起顶格（仿现汉）
+%   义项序号：\sense{1} → ❶     另见：\seealso{\G{d_me}、\G{d_you}}
+%   不同词性不同义时：词性参数留空，在各义项写词性，序号自动编：
+%     \entry{d_fool}{}{\sense{名}愚者。\sense{形}愚蠢的。}  →  ❶ 名 愚者。❷ 形 愚蠢的。
+%   \sense 的参数是数字时只出序号，是词性时自动编号并加词性方框（可写多个：\sense{名,动}）
+% ---------------------------------------------------------------
+\newcommand\DictHeadSize{% 字头字号：随正文行距自动取约两行高
+  \fontsize{\dimexpr1.8\baselineskip\relax}{\dimexpr1.8\baselineskip\relax}\selectfont}
+\newcommand\DictEntrySep{1\baselineskip} % 条目间距：现为一行，即条目间相隔两倍行距
+\newcommand\DictHeadGap{0.3em}  % 字头与释义的间距
+\newcommand\DictContIndent{0pt} % 第三行起的缩进
+\newcommand\DictPosSep{\enspace}% 词性与释义之间
+
+% 行数：每页从 1 起，按条目先后编号；印在字头外侧（左栏在左、右栏在右），
+%   与释义首行对齐；检字表中记为“页-行”，如 1-1
+\providecommand\DictLineNoFont{\sffamily}               % 主文件中设为 Arial
+\newcommand\DictLineNoStyle{\fontsize{10.5pt}{12pt}\selectfont\bfseries} % 五号加粗
+\newcommand\DictLineNoGap{0.6em}                        % 行数与字头/栏边的距离
+
+% 词性方框
+\NewDocumentCommand\pos{m}{%
+  {\setlength\fboxsep{0.4pt}\setlength\fboxrule{0.4pt}\fbox{#1}}}
+% 义项序号
+
+% 另见：另起一行，缩进两字
+\NewDocumentCommand\seealso{m}{\newline\hspace*{2em}另见\enspace#1}
+
+\ExplSyntaxOn
+\seq_new:N \l__dict_pos_seq
+\box_new:N \l__dict_head_box
+\dim_new:N \l__dict_head_dim
+\dim_new:N \l__dict_cont_dim
+\cs_new_protected:Npn \__dict_pos_list:n #1
+  {
+    \seq_clear:N \l__dict_pos_seq
+    \clist_map_inline:nn {#1}
+      { \seq_put_right:Nn \l__dict_pos_seq { \pos{##1} } }
+    \seq_use:Nn \l__dict_pos_seq { 、 }
+  }
+\int_new:N \g__dict_line_int
+\int_new:N \g__dict_prevpage_int
+\tl_new:N  \l__dict_id_tl
+% 由 .aux 读回：\Dict@setline{字}{行数}
+\cs_new_protected:Npn \Dict@setline #1#2 { \tl_gset:cn { g__dict_line_#1_tl } {#2} }
+\NewExpandableDocumentCommand \DictLineOf { m }
+  { \tl_if_exist:cTF { g__dict_line_ \tl_to_str:n {#1} _tl }
+      { \tl_use:c { g__dict_line_ \tl_to_str:n {#1} _tl } } { ?? } }
+\int_new:N \g__dict_sense_int
+\NewDocumentCommand \sense { m }
+  {
+    \regex_match:nnTF { \A \d+ \Z } {#1}
+      { \int_gset:Nn \g__dict_sense_int {#1} }
+      { \int_gincr:N \g__dict_sense_int }
+    \ding { \int_eval:n { 201 + \g__dict_sense_int } } \,
+    \regex_match:nnF { \A \d+ \Z } {#1}
+      { \__dict_pos_list:n {#1} \DictPosSep }
+    \ignorespaces
+  }
+\NewDocumentCommand \entry { m m m }
+  {
+    \par
+    \int_gzero:N \g__dict_sense_int
+    \tl_set:Ne \l__dict_id_tl { \tl_to_str:n {#1} }
+    % 行数：按上一次编译记录的页码判断是否换页
+    \int_set:Nn \l_tmpa_int
+      { \zref@extractdefault { cosp: \l__dict_id_tl } { abspage } { 0 } }
+    \int_compare:nNnTF { \l_tmpa_int } = { \g__dict_prevpage_int }
+      { \int_gincr:N \g__dict_line_int }
+      { \int_gset:Nn \g__dict_line_int { 1 } }
+    \int_gset_eq:NN \g__dict_prevpage_int \l_tmpa_int
+    \iow_shipout:Ne \@auxout
+      { \token_to_str:N \Dict@setline { \l__dict_id_tl } { \int_use:N \g__dict_line_int } }
+    \hbox_set:Nn \l_tmpb_box
+      { \DictLineNoFont \DictLineNoStyle \int_use:N \g__dict_line_int }
+    % 字头：下沉一行，高度与深度清零，不影响行距
+    \hbox_set:Nn \l__dict_head_box
+      { \box_move_down:nn { \baselineskip } { \hbox:n { \DictHeadSize \G{#1} } } }
+    \box_set_ht:Nn \l__dict_head_box { 0pt }
+    \box_set_dp:Nn \l__dict_head_box { 0pt }
+    \dim_set:Nn \l__dict_head_dim { \box_wd:N \l__dict_head_box + \DictHeadGap }
+    \dim_set:Nn \l__dict_cont_dim { \DictContIndent }
+    % 前两行让出字头宽度，第三行起按 \DictContIndent 缩进
+    \parshape 3
+      \l__dict_head_dim \dim_eval:n { \linewidth - \l__dict_head_dim }
+      \l__dict_head_dim \dim_eval:n { \linewidth - \l__dict_head_dim }
+      \l__dict_cont_dim \dim_eval:n { \linewidth - \l__dict_cont_dim }
+    \noindent
+    \InsertMark { dict-glyph } {#1}
+    \label { cos:#1 }
+    \exp_args:Ne \zsavepos { cosp: \l__dict_id_tl }
+    % 判断左右栏（取上一次编译记录的横坐标）
+    \dim_compare:nNnTF
+      { \zposx { cosp: \l__dict_id_tl } sp } < { 0.5\paperwidth }
+      { % 左栏：行数在字头左边
+        \hbox_overlap_left:n
+          {
+            \box_use:N \l_tmpb_box \hskip \DictLineNoGap
+            \hbox_to_wd:nn { \l__dict_head_dim } { \box_use:N \l__dict_head_box \hfil }
+          }
+      }
+      { % 右栏：行数在本栏右边
+        \hbox_overlap_left:n
+          { \hbox_to_wd:nn { \l__dict_head_dim } { \box_use:N \l__dict_head_box \hfil } }
+        \hbox_overlap_right:n
+          {
+            \hskip \dim_eval:n { \linewidth - \l__dict_head_dim + \DictLineNoGap }
+            \box_use:N \l_tmpb_box
+          }
+      }
+    \tl_if_blank:nF {#2} { \__dict_pos_list:n {#2} \DictPosSep }
+    #3
+    \par
+    % 释义只有一行时补足一行，避免字头压到下一条
+    \int_compare:nNnT { \prevgraf } < { 2 } { \vskip \baselineskip }
+    \vskip \DictEntrySep
+  }
+\ExplSyntaxOff
+
+% 双栏条目区：栏间竖线；条目间不加空。
+%   \begin{entries}[\section{信徒语……}] … \end{entries}
+%   可选参数为跨两栏的标题。用 LaTeX 自带的双栏模式（而非 multicol），
+%   以便书眉检索字正确取到本页首条与末条。每种语言另起一页。
+%   标题上下留白相等：页眉线到标题 ＝ 标题到栏线顶端
+\newcommand\DictTitleAfter{\headsep-2pt} % 标题下方距离（按实测校准）
+\newlength\Dict@titleafter
+\newenvironment{entries}[1][]
+  {\setlength\columnseprule{0.4pt}\setlength\parskip{0pt}%
+   \setlength\Dict@titleafter{\dimexpr\DictTitleAfter\relax}%
+   \titlespacing*{\section}{0pt}{0pt}{\Dict@titleafter}%
+   \twocolumn[#1]}
+  {\onecolumn}
+
+% ---------------------------------------------------------------
+% 说明栏：放在 entries 环境末尾，自动另起一栏（条目结束后空着的那一栏），从栏顶排起
+%   \begin{dictnotes}
+%     正文段落……
+%     \dictexample{d_preacherd_notd_garden}{“教士不（在）花园。”}
+%   \end{dictnotes}
+%   可选参数改标题：\begin{dictnotes}[凡例：]
+% ---------------------------------------------------------------
+\providecommand\DictExampleFont{}                  % 例句译文字体（主文件中设为楷体）
+\newcommand\DictNotesHeadFont{\DictTitleFont\bfseries} % “说明：”标题：华文中宋加粗
+\newcommand\DictExampleGlyphSize{\fontsize{18pt}{26pt}\selectfont} % 例句游戏文字字号
+\newenvironment{dictnotes}[1][说明：]
+  {\par\newpage % 另起一栏；若本栏尚空则不动
+   {\noindent\DictNotesHeadFont #1\par}% 标题不缩进
+   \vskip0.3\baselineskip\hrule height0.4pt\vskip0.6\baselineskip
+   \setlength\parindent{2em}\setlength\parskip{0pt}}
+  {\par}
+\NewDocumentCommand\dictexample{m m}{%
+  \par\addvspace{0.6\baselineskip}%
+  {\centering\DictExampleGlyphSize\G{#1}\par}%
+  \addvspace{0.2\baselineskip}%
+  {\centering\DictExampleFont #2\par}%
+  \addvspace{0.4\baselineskip}}
+
+% ---------------------------------------------------------------
+% 检字表（仿现汉部首检字表：七栏、栏间竖线、部首带序号、无笔画分段）
+%   \DictIndexmatter
+%   \section{检字表}                          —— 总标题，只写一次
+%   \begin{indextable}[栏数]{信徒语字根检字表}  —— 分标题在表内，跨栏居中；默认 7 栏
+%     \indexhead{d_man}{根}                   —— 分组：序号 + 字根/部首 + “根”或“部”
+%     \indexitem{d_man}                       —— 字形 + 页-行（如 1-1，自动取正文位置）
+%   \end{indextable}
+% ---------------------------------------------------------------
+\newcommand\DictIndexTitleFont{\bfseries\fontsize{14pt}{18pt}\selectfont} % 分标题：四号加粗
+\newcounter{dictradical}
+\newcommand\Dict@indextitle[1]{%
+  \par\addvspace{\baselineskip}%
+  {\centering\DictIndexTitleFont #1\par}%
+  \vskip0.3\baselineskip\hrule height0.4pt\vskip0.3\baselineskip}
+\newenvironment{indextable}[2][7]
+  {\setcounter{dictradical}{0}%
+   \setlength\columnseprule{0.4pt}\setlength\columnsep{1em}%
+   \setlength\parindent{0pt}\setlength\parskip{0pt}%
+   \raggedcolumns
+   \begin{multicols}{#1}[\Dict@indextitle{#2}]}
+  {\end{multicols}}
+\newcommand\DictIndexHeadBefore{0.8\baselineskip} % 上一组末条到下一个小标题的距离（落在栏首时自动消失）
+\newcommand\DictIndexHeadAfter{0.3\baselineskip}  % 小标题方框到本组首条的距离
+\NewDocumentCommand\indexhead{m m}{%
+  \par\stepcounter{dictradical}%
+  \vskip\DictIndexHeadBefore
+  % 小标题：序号与字根/部首框在一个与栏同宽的方框里，不拆开
+  \hbox{\setlength\fboxsep{2pt}\setlength\fboxrule{0.4pt}%
+    \fbox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{%
+      \centering\bfseries\thedictradical\par
+      \if\relax\detokenize{#1}\relax\else\G{#1}\,\fi#2\par}}}%
+  \nopagebreak\vskip\DictIndexHeadAfter}
+\NewDocumentCommand\indexitem{m}{%   页-行，如 1-1
+  \G{#1}\hfill\pageref{cos:#1}-\DictLineOf{#1}\par}
+
+\endinput
